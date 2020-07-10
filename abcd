@@ -1,0 +1,54 @@
+/* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** **
+Filename: csv.jake
+Date: 8/17/17
+Author: Chris Mendez 
+URL: http://chrisjmendez.com/2017/08/23/create-fake-emails-for-testing/
+Description: Create a CSV file full of fake data. 
+* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** **/
+var fs = require('fs'),
+util   = require('util'),
+path   = require("path"),
+moment = require('moment'),
+async  = require("async"),
+faker  = require('faker'),
+stringify = require('csv-stringify')
+
+namespace('csv', function () {
+	desc('Create a CSV files used for uploading.');
+	task('create', { async: true }, { breakOnError: true }, function() {
+		var num_of_records = 11;
+		async.waterfall([
+			//Create fake data
+			function(callback) {
+				var arr = []
+				arr.push(faker.fake("SMS,Email,First,Last\n"));
+				for( var i = 0; i < num_of_records; i++){
+					arr.push(faker.fake("{{phone.phoneNumber}},{{internet.email}},{{name.lastName}},{{name.firstName}}\n"));
+				}
+				callback(null, arr);
+			},
+			//Convert it to CSV
+			function(arr, callback) {
+				input = arr;
+				stringify(input, { columns: 0, rowDelimiter: '\n' }, function(err, output){
+					//console.log(output);
+					callback(null, output);
+				});
+			},
+			//Save to filesystem
+			function(csv, callback) {
+				var filePath = "./";
+				var timestamp = moment().format("YYMMDD-hh:mm:ss");
+				var fileName = path.join(filePath, timestamp + '.csv');
+				fs.writeFile( fileName, csv, function(err) {
+					if( err ) return console.log( err );
+					callback(null);
+				});					
+			}
+		], function (err, result) {
+			if(err) console.log("err:", err);
+			//End Jake Process
+			process.exit();
+		});
+	});
+});
