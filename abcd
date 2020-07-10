@@ -1,54 +1,151 @@
-/* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** **
-Filename: csv.jake
-Date: 8/17/17
-Author: Chris Mendez 
-URL: http://chrisjmendez.com/2017/08/23/create-fake-emails-for-testing/
-Description: Create a CSV file full of fake data. 
-* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** **/
-var fs = require('fs'),
-util   = require('util'),
-path   = require("path"),
-moment = require('moment'),
-async  = require("async"),
-faker  = require('faker'),
-stringify = require('csv-stringify')
 
-namespace('csv', function () {
-	desc('Create a CSV files used for uploading.');
-	task('create', { async: true }, { breakOnError: true }, function() {
-		var num_of_records = 11;
-		async.waterfall([
-			//Create fake data
-			function(callback) {
-				var arr = []
-				arr.push(faker.fake("SMS,Email,First,Last\n"));
-				for( var i = 0; i < num_of_records; i++){
-					arr.push(faker.fake("{{phone.phoneNumber}},{{internet.email}},{{name.lastName}},{{name.firstName}}\n"));
-				}
-				callback(null, arr);
-			},
-			//Convert it to CSV
-			function(arr, callback) {
-				input = arr;
-				stringify(input, { columns: 0, rowDelimiter: '\n' }, function(err, output){
-					//console.log(output);
-					callback(null, output);
-				});
-			},
-			//Save to filesystem
-			function(csv, callback) {
-				var filePath = "./";
-				var timestamp = moment().format("YYMMDD-hh:mm:ss");
-				var fileName = path.join(filePath, timestamp + '.csv');
-				fs.writeFile( fileName, csv, function(err) {
-					if( err ) return console.log( err );
-					callback(null);
-				});					
-			}
-		], function (err, result) {
-			if(err) console.log("err:", err);
-			//End Jake Process
-			process.exit();
-		});
-	});
-});
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+var faker = require('faker');
+var uuidV4 = require('uuid/v4');
+ 
+var log = {
+  "v": "1.0",
+  "category": "ERRORLOG",
+  "level": "INFO",
+  "timestamp": "2016-11-04T22:02:02.365Z",
+  "application": {
+    "name": "My Fav application",
+    "version": "1.0.0-SNAPSHOT",
+    "thread": "default task-16",
+    "component": "com.AuditLogInterceptor"
+  },
+  "context": {
+    "tenantId": "saml-demo",
+    "principalId": "griduser",
+    "userGuid" : "c92c7642-777a-41a2-87d6-79a8acec1d7f",
+    "sessionId": "123456789",  
+    "globalAccessId": "593b740b-d53e-490a-b5d1-fb3fa2fc1c4c",
+    "policyId": "c92c7642-777a-41a2-87d6-79a8acec1d7f",
+    "policyName": "Default",
+    "scenarioId": "0011c00d-b48b-b82c-4a66-1d394b64ff67",
+    "scenarioName": "trusted network",
+    "applicationId" : "c92c7642-777a-41a2-87d6-79a8acec1d7f",
+    "applicationName" : "Office 365",
+  },
+  "details": {
+    "type": "ACCESS REQUEST",
+    "state": "",
+    "action" : "",
+    "credentials" : [
+        {
+            type: "OTP",
+            state: "" 
+        },
+        {
+            type: "Password",
+            state: ""
+        }
+    ]
+  }
+}
+ 
+var state = ["Initiated", "Accepted", "Denied" ,"Waiting"];
+var action = ["auth", "change password", "push", "restart"];
+var cred_state = ["Pending", "VerifiedInSession","Verified" ];
+ 
+function  genlog() {
+  log.timestamp = faker.date.recent();
+  log.context.tenantId = faker.company.companyName().replace(/\s+/g, ''); //remove space in name
+  log.context.principalId = faker.internet.userName();
+  log.context.userGuid = uuidV4(); //generate guid
+  log.context.sessionId = uuidV4();
+  log.context.globalAccessId = uuidV4();
+  log.context.policyId = uuidV4();
+  log.context.policyName = faker.commerce.productName();
+  log.context.scenarioId = uuidV4();
+  log.context.scenarioName = faker.commerce.productName();
+  log.context.applicationId = uuidV4();
+  log.context.applicationName = faker.commerce.productName();
+  var state_randon = faker.random.number({min:0, max:state.length});
+  var action_random = faker.random.number({min:0, max:action.length});
+  var cred_random = faker.random.number({min:0, max:cred_state.length});
+  var cred_random2 = faker.random.number({min:0, max:cred_state.length});
+ 
+  log.details.state = state[state_randon];
+  log.details.action = action[action_random];
+  log.details.credentials[0].state = cred_state[cred_random];
+  log.details.credentials[1].state = cred_state[cred_random2];
+  
+  console.log("%j", log);
+}
+ 
+genlog();
